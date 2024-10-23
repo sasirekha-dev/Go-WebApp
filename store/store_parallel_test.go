@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"sync"
 	"testing"
@@ -15,9 +14,6 @@ func TestInMemoryStore_ParallelOperations(t *testing.T) {
 
 	t.Run("TestParallelInsertions", func(t *testing.T) {
 		var wg sync.WaitGroup
-		// ctx := context.Background()
-		// store := NewInMemoryStore(ctx)
-		// defer store.Shutdown()
 
 		// Parallel insertions
 		// for i := 0; i < 10; i++ {
@@ -68,7 +64,6 @@ func TestInMemoryStore_ParallelOperations(t *testing.T) {
 		for i := 0; i < 5; i++ {
 			store.InsertItem("ITEM-"+strconv.Itoa(i), "pending")
 		}
-		fmt.Println("STORE", store.ToDo)
 
 		for i := 0; i < 5; i++ {
 			wg.Add(1)
