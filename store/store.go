@@ -159,10 +159,11 @@ func (store *InMemoryStore) listItems(req listRequest) {
 	var ListOfItems []Todolist
 	if len(store.ToDo) == 0 {
 		req.ResponseChan <- make([]Todolist, 0)
+		return
 	}
 	for _, item := range store.ToDo {
 		// fmt.Printf("%d.%s: %s\n", i+1, item.Item, item.Status)
-		ListOfItems = append(ListOfItems, Todolist{item.Item, item.Status})
+		ListOfItems = append(ListOfItems, Todolist{Task: item.Item, Status: item.Status})
 	}
 	req.ResponseChan <- ListOfItems
 }

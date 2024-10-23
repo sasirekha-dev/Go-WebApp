@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+</head>
+<body>
+    <h1>Todo List</h1>
+    
+    <!-- Add new todo item -->
+    <form method="POST" action="/add">
+        <input type="text" name="item" placeholder="Todo item" required>
+        <input type="text" name="status" placeholder="Status" required>
+        <button type="submit">Add</button>
+    </form>
+
+    <h2>Current Todo Items</h2>
+    <ul>
+        {{range .Items}}
+        <li>
+            <!-- Display Task and Status -->
+            {{.Task}} - {{.Status}}
+
+            
+            <form method="POST" action="/delete" style="display:inline;">
+                <input type="hidden" name="item" value="{{.Task}}">
+                <button type="submit">Delete</button>
+            </form>
+            
+            <form method="POST" action="/edit" style="display:inline;">
+                <input type="hidden" name="item" value="{{.Task}}">
+                <input type="text" name="status" placeholder="New status" required>
+                <button type="submit">Update</button>
+            </form>
+        </li>
+        {{else}}
+        <li>No items found</li>
+        {{end}}
+    </ul>
+</body>
+</html>

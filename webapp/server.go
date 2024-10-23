@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
@@ -15,14 +16,36 @@ import (
 
 var connections int = 0
 
+type PageData struct {
+	Items []store.Todolist
+}
 type taskID string
 
 func GetHandler(res http.ResponseWriter, req *http.Request) {
-	// traceID := req.Context().Value(taskID("taskID")).(string)
-	// fmt.Printf("TraceID: %s | landing page\n", traceID)
+	traceID := req.Context().Value(taskID("taskID")).(string)
+	fmt.Printf("TraceID: %s | landing page\n", traceID)
+	// http.ServeFile(res, req, "static/index.html")
+	todoItems := Store.ListItems()
 
-	connections += 1
-	fmt.Fprintf(res, "request- %d", connections)
+	// Parse the index.html template
+	template := template.Must(template.ParseFiles("static/index.html"))
+	// if err != nil {
+	// 	http.Error(res, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+	fmt.Println(todoItems)
+	// Create PageData with the todo items
+	data := struct {
+		Items []store.Todolist
+	}{
+		Items: todoItems,
+	}
+	res.Header().Set("Content-Type", "text/html; charset=utf-8")
+	// Execute the template with the PageData
+	err := template.Execute(res, data)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func ListItemsHandler(res http.ResponseWriter, req *http.Request) {
@@ -163,10 +186,12 @@ func main() {
 	mux.HandleFunc("/edit", UpdateItemHandler)
 	mux.HandleFunc("/delete", deleteItemHandler)
 	mux.HandleFunc("/", GetHandler)
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 	ctx := context.Background()
 	logger := TheLogger(mux)
 	// Choose between cli and api modes
-	flag.StringVar(&mode, "mode", "cli", "Run mode: 'cli' or 'api'")
+	flag.StringVar(&mode, "mode", "api", "Run mode: 'cli' or 'api'")
 	//Choose the Database
 	// storeType := flag.String("store", "memory", "choose memory or json")
 	flag.Parse()
