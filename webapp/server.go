@@ -32,7 +32,6 @@ func GetHandler(res http.ResponseWriter, req *http.Request) {
 	// Parse the index.html template
 	template := template.Must(template.ParseFiles(TemplatePath))
 
-	fmt.Println(todoItems)
 	// Create PageData with the todo items
 	data := struct {
 		Items []store.Todolist

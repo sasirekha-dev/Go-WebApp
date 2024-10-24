@@ -124,7 +124,7 @@ func (store *InMemoryStore) deleteItem(req DeleteRequest) {
 }
 func (store *InMemoryStore) DeleteItem(taskName string) error {
 	// fmt.Print("received delete request")
-	responseChan := make(chan error)
+	responseChan := make(chan error, 1)
 	store.deleteChan <- DeleteRequest{item: taskName, ResponseChan: responseChan}
 	return <-responseChan
 }

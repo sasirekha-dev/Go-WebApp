@@ -23,4 +23,17 @@ To run server via API calls
 ============================
 .\server -mode=api
 
+Server runs in 8080 port
+http://localhost:8080/ - single landing page to demonstrate CRUD operations on the database.
+
+
 Note: By default the server runs in API mode
+
+
+Testing
+========
+Include unit test and parallel test
+To run unit test execute -  go test
+To run the parallel test - go test -race OR 
+To run specific test case - go test <package name> -race <test suite name>
+For example: go test WebApp\store -race TestInMemoryStore_ParallelOperations
