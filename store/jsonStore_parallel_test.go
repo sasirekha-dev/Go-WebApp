@@ -89,7 +89,7 @@ func TestJSONMemoryStore_ParallelOperations(t *testing.T) {
 			go func(i int) {
 				itemID := store.ToDo[i].Item
 				defer wg.Done()
-				err := store.UpdateItem(itemID)
+				err := store.UpdateItem(itemID, "complete")
 				if err != nil {
 					t.Errorf("error updating item: %v", err)
 				}
@@ -99,7 +99,7 @@ func TestJSONMemoryStore_ParallelOperations(t *testing.T) {
 
 		items := store.ListItems()
 		for _, item := range items {
-			if item.Status != "completed" {
+			if item.Status != "complete" {
 				t.Errorf("expected item status to be 'completed', got %s", item.Status)
 			}
 		}

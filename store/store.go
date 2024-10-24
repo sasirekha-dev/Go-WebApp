@@ -22,6 +22,7 @@ type addRequest struct {
 }
 type updateRequest struct {
 	item         string
+	status       string
 	ResponseChan chan error
 }
 type DeleteRequest struct {
@@ -56,19 +57,19 @@ func NewInMemoryStore(ctx context.Context) *InMemoryStore {
 		},
 	}
 	store.SetUUIDGenerator(&RealUUIDGenerator{}) // Set the default UUID generator
-	go store.Run(ctx)
+	go store.ExecuteCommand(ctx)
 	return store
 }
 
 type ToDoStore interface {
 	InsertItem(string, string) ToDoItem
 	DeleteItem(string) error
-	UpdateItem(string) error
+	UpdateItem(string, string) error
 	ListItems() []Todolist
 }
 
 type UuidGenerator interface {
-	generateUUID() string
+	GenerateUUID() string
 }
 
 func (inMem *InMemoryStore) SetUUIDGenerator(generator UuidGenerator) {
@@ -78,7 +79,7 @@ func (inMem *InMemoryStore) SetUUIDGenerator(generator UuidGenerator) {
 type RealUUIDGenerator struct{}
 
 // NewUUID generates a real UUID
-func (g RealUUIDGenerator) generateUUID() string {
+func (g RealUUIDGenerator) GenerateUUID() string {
 	return uuid.New().String()
 }
 
@@ -89,7 +90,7 @@ func (store *InMemoryStore) insertItem(req addRequest) {
 	if req.status == "" {
 		req.status = "pending"
 	}
-	todo := ToDoItem{Id: store.generator.generateUUID(), Item: req.item, Status: req.status}
+	todo := ToDoItem{Id: store.generator.GenerateUUID(), Item: req.item, Status: req.status}
 	store.ToDo = append(store.ToDo, todo)
 	fmt.Printf("Adding item %+v\n", store.ToDo)
 
@@ -134,16 +135,16 @@ func (store *InMemoryStore) updateItem(req updateRequest) {
 
 	for i, task := range store.ToDo {
 		if task.Item == req.item {
-			store.ToDo[i].Status = "completed"
+			store.ToDo[i].Status = req.status
 			req.ResponseChan <- nil
 		}
 	}
 	req.ResponseChan <- errors.New("no item found")
 }
 
-func (store *InMemoryStore) UpdateItem(task string) error {
+func (store *InMemoryStore) UpdateItem(task string, status string) error {
 	responseChan := make(chan error, 1)
-	store.updateChan <- updateRequest{item: task, ResponseChan: responseChan}
+	store.updateChan <- updateRequest{item: task, status: status, ResponseChan: responseChan}
 	return <-responseChan
 
 }
@@ -172,7 +173,6 @@ func (store *InMemoryStore) ListItems() []Todolist {
 	listresponseChan := make(chan []Todolist, 1)
 	store.listChan <- listRequest{ResponseChan: listresponseChan}
 	list := <-listresponseChan
-	fmt.Println("List of items=====>>>", list)
 	return list
 }
 
@@ -181,7 +181,7 @@ func (store *InMemoryStore) Shutdown() {
 }
 
 // Listens to request and process them sequentially
-func (store *InMemoryStore) Run(ctx context.Context) {
+func (store *InMemoryStore) ExecuteCommand(ctx context.Context) {
 	fmt.Println("Go routine started....listening to request")
 	for {
 		select {
@@ -191,7 +191,7 @@ func (store *InMemoryStore) Run(ctx context.Context) {
 				fmt.Print("closing add channel...")
 				return
 			}
-			store.wg.Add(1) // Increment the WaitGroup counter
+			store.wg.Add(1)
 			go func(req addRequest) {
 				defer store.wg.Done()
 				fmt.Println("Starting goroutine for adding item")
@@ -207,7 +207,7 @@ func (store *InMemoryStore) Run(ctx context.Context) {
 				return
 			}
 
-			store.wg.Add(1) // Increment the WaitGroup counter
+			store.wg.Add(1)
 			go func(req updateRequest) {
 				defer store.wg.Done()
 				fmt.Println("Starting goroutine for updating item")
@@ -222,7 +222,7 @@ func (store *InMemoryStore) Run(ctx context.Context) {
 				return
 			}
 
-			store.wg.Add(1) // Increment the WaitGroup counter
+			store.wg.Add(1)
 			go func(req DeleteRequest) {
 				defer store.wg.Done()
 				fmt.Println("Starting goroutine for deleting item")
@@ -237,9 +237,7 @@ func (store *InMemoryStore) Run(ctx context.Context) {
 				fmt.Print("closing list channel...")
 				return
 			}
-
-			store.wg.Add(1) // Increment the WaitGroup counter
-
+			store.wg.Add(1)
 			go func(req listRequest) {
 				defer store.wg.Done()
 				fmt.Println("Starting goroutine for list item")

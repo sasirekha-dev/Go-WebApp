@@ -21,6 +21,8 @@ type PageData struct {
 }
 type taskID string
 
+var TemplatePath string = "static/index.html"
+
 func GetHandler(res http.ResponseWriter, req *http.Request) {
 	traceID := req.Context().Value(taskID("taskID")).(string)
 	fmt.Printf("TraceID: %s | landing page\n", traceID)
@@ -28,11 +30,8 @@ func GetHandler(res http.ResponseWriter, req *http.Request) {
 	todoItems := Store.ListItems()
 
 	// Parse the index.html template
-	template := template.Must(template.ParseFiles("static/index.html"))
-	// if err != nil {
-	// 	http.Error(res, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
+	template := template.Must(template.ParseFiles(TemplatePath))
+
 	fmt.Println(todoItems)
 	// Create PageData with the todo items
 	data := struct {
@@ -41,7 +40,7 @@ func GetHandler(res http.ResponseWriter, req *http.Request) {
 		Items: todoItems,
 	}
 	res.Header().Set("Content-Type", "text/html; charset=utf-8")
-	// Execute the template with the PageData
+
 	err := template.Execute(res, data)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -90,12 +89,13 @@ func UpdateItemHandler(res http.ResponseWriter, req *http.Request) {
 	traceID := req.Context().Value(taskID("taskID")).(string)
 	fmt.Printf("TraceID: %s | Editing item\n", traceID)
 	item := req.FormValue("item")
-	if len(item) == 0 {
+	status := req.FormValue("status")
+	if len(item) == 0 || len(status) == 0 {
 		http.Error(res, "Failed to parse form data", http.StatusBadRequest)
 		return
 	}
 
-	err := Store.UpdateItem(item)
+	err := Store.UpdateItem(item, status)
 	if err != nil {
 		http.Error(res, "Failed to update item", http.StatusInternalServerError)
 		slog.Info("Item update failed", slog.String("TraceID", traceID), slog.String("item", item))
@@ -159,7 +159,7 @@ func handleCliCommands() {
 		Store.InsertItem(*item, *status)
 	case "update":
 		update.Parse(args[1:])
-		Store.UpdateItem(*updateItem)
+		Store.UpdateItem(*updateItem, *updateStatus)
 		fmt.Printf("%s is updated to %s", *updateItem, *updateStatus)
 	case "delete":
 		delete.Parse(args[1:])
@@ -183,7 +183,7 @@ func main() {
 	// handler := http.HandlerFunc(GetHandler)
 	mux.HandleFunc("/list", ListItemsHandler)
 	mux.HandleFunc("/add", AddItemHandler)
-	mux.HandleFunc("/edit", UpdateItemHandler)
+	mux.HandleFunc("/update", UpdateItemHandler)
 	mux.HandleFunc("/delete", deleteItemHandler)
 	mux.HandleFunc("/", GetHandler)
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -196,7 +196,7 @@ func main() {
 	// storeType := flag.String("store", "memory", "choose memory or json")
 	flag.Parse()
 	storeType := "json"
-	fmt.Println("Store type...----->>>>", storeType)
+	fmt.Println("Store type selected - ", storeType)
 	if storeType == "memory" {
 		fmt.Println("Using MEMORY store ")
 		Store = store.NewInMemoryStore(ctx)

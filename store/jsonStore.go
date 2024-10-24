@@ -90,7 +90,7 @@ func (jsonStore *JsonStore) insertItem(req addRequest) {
 	jsonStore.mu.Lock()
 	defer jsonStore.mu.Unlock()
 
-	id := jsonStore.generator.generateUUID()
+	id := jsonStore.generator.GenerateUUID()
 	newToDo.Id = id
 	newToDo.Item = req.item
 	newToDo.Status = req.status
@@ -114,7 +114,7 @@ func (jsonStore *JsonStore) updateItem(req updateRequest) {
 
 	for i, content := range jsonStore.ToDo {
 		if content.Item == req.item {
-			content.Status = "completed"
+			content.Status = req.status
 			jsonStore.ToDo[i] = content
 			req.ResponseChan <- nil
 		}
@@ -125,9 +125,9 @@ func (jsonStore *JsonStore) updateItem(req updateRequest) {
 	}
 }
 
-func (jsonStore *JsonStore) UpdateItem(item string) error {
+func (jsonStore *JsonStore) UpdateItem(item string, status string) error {
 	responseChan := make(chan error, 1)
-	jsonStore.updateChan <- updateRequest{item: item, ResponseChan: responseChan}
+	jsonStore.updateChan <- updateRequest{item: item, status: status, ResponseChan: responseChan}
 	return <-responseChan
 
 }
