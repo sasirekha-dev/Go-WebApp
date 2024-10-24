@@ -11,9 +11,12 @@ To run in two different data stores
 
 To change mode to CLI
 =========================
-.\server -mode=cli insert -item="learn Go" -status="on going" 
+.\server -mode=cli insert -item="learn Go" -status="on going"
+
 .\server -mode=cli update -item="learn Go" 
+
 .\server -mode=cli delete -item="learn Go"  
+
 .\server -mode=cli list 
 
 To run server via API calls
