@@ -25,7 +25,7 @@ var TemplatePath string = "static/index.html"
 
 func GetHandler(res http.ResponseWriter, req *http.Request) {
 	traceID := req.Context().Value(taskID("taskID")).(string)
-	fmt.Printf("TraceID: %s | landing page\n", traceID)
+	slog.Info("Landing Page", slog.String("\nTraceID: %s\n", traceID))
 	// http.ServeFile(res, req, "static/index.html")
 	todoItems := Store.ListItems()
 
@@ -48,7 +48,8 @@ func GetHandler(res http.ResponseWriter, req *http.Request) {
 
 func ListItemsHandler(res http.ResponseWriter, req *http.Request) {
 	traceID := req.Context().Value(taskID("taskID")).(string)
-	fmt.Printf("TraceID: %s | Adding item\n", traceID)
+	slog.Info("List Request", slog.String("\nTraceID: %s | Listing item\n", traceID))
+
 	todoItems := Store.ListItems()
 
 	slog.Info("Item listed successfully", slog.String("TraceID", traceID))
@@ -59,7 +60,7 @@ func ListItemsHandler(res http.ResponseWriter, req *http.Request) {
 
 func AddItemHandler(res http.ResponseWriter, req *http.Request) {
 	traceID := req.Context().Value(taskID("taskID")).(string)
-	fmt.Printf("TraceID: %s | Adding item\n", traceID)
+	slog.Info("Add Request", slog.String("\nTraceID: %s | Adding item\n", traceID))
 	err := req.ParseForm()
 	if err != nil {
 		http.Error(res, "Failed to parse form data", http.StatusBadRequest)
@@ -86,7 +87,7 @@ func AddItemHandler(res http.ResponseWriter, req *http.Request) {
 
 func UpdateItemHandler(res http.ResponseWriter, req *http.Request) {
 	traceID := req.Context().Value(taskID("taskID")).(string)
-	fmt.Printf("TraceID: %s | Editing item\n", traceID)
+	slog.Info("Update Request", slog.String("\nTraceID: %s | Updating item\n", traceID))
 	item := req.FormValue("item")
 	status := req.FormValue("status")
 	if len(item) == 0 || len(status) == 0 {
@@ -107,7 +108,7 @@ func UpdateItemHandler(res http.ResponseWriter, req *http.Request) {
 
 func deleteItemHandler(res http.ResponseWriter, req *http.Request) {
 	traceID := req.Context().Value(taskID("taskID")).(string)
-	fmt.Printf("\nTraceID: %s | Deleting item\n", traceID)
+	slog.Info("Delete Request", slog.String("\nTraceID: %s | Deleting item\n", traceID))
 	item := req.FormValue("item")
 	if len(item) == 0 {
 		http.Error(res, "Failed to parse form data", http.StatusBadRequest)
