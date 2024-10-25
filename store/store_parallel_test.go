@@ -11,7 +11,7 @@ func TestInMemoryStore_ParallelOperations(t *testing.T) {
 	ctx := context.Background()
 	store := NewInMemoryStore(ctx)
 	defer store.Shutdown()
-
+	numOfItems := 10
 	t.Run("TestParallelInsertions", func(t *testing.T) {
 		var wg sync.WaitGroup
 
@@ -24,7 +24,7 @@ func TestInMemoryStore_ParallelOperations(t *testing.T) {
 		// 	}(fmt.Sprintf("item-%d", i))
 		// }
 		//Continuous insertions
-		for i := 0; i < 10; i++ {
+		for i := 0; i < numOfItems; i++ {
 			item := "ITEM-" + strconv.Itoa(i)
 			store.InsertItem(item, "pending")
 		}
@@ -33,7 +33,7 @@ func TestInMemoryStore_ParallelOperations(t *testing.T) {
 		wg.Wait()
 
 		items := store.ListItems()
-		if len(items) != 10 {
+		if len(items) != numOfItems {
 			t.Errorf("expected 3 items, got %d", len(items))
 		}
 
@@ -41,7 +41,7 @@ func TestInMemoryStore_ParallelOperations(t *testing.T) {
 
 	t.Run("TestParallelDeletions", func(t *testing.T) {
 
-		for i := 0; i < 10; i++ {
+		for i := 0; i < numOfItems; i++ {
 			itemName := "ITEM-" + strconv.Itoa(i)
 			err := store.DeleteItem(itemName)
 			if err != nil && err.Error() != "item was not deleted" {
