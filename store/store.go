@@ -35,10 +35,6 @@ type ToDoStore interface {
 	ListItems() []Todolist
 }
 
-type UuidGenerator interface {
-	GenerateUUID() string
-}
-
 func (inMem *InMemoryStore) SetUUIDGenerator(generator UuidGenerator) {
 	inMem.generator = generator
 }
@@ -74,7 +70,6 @@ func (store *InMemoryStore) deleteItem(req DeleteRequest) {
 	store.mu.Lock() // Lock before modifying the shared ToDo slice
 	defer store.mu.Unlock()
 
-	fmt.Println("Item to delete----->>>>>", req.item, store.ToDo)
 	if len(req.item) == 0 {
 		req.ResponseChan <- errors.New("no item to delete")
 		return

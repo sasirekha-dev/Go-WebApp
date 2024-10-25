@@ -27,7 +27,8 @@ func main_cli(inMemory store.ToDoStore) {
 		inMemory.InsertItem(*item, *status)
 	case "update":
 		update.Parse(args[1:])
-		inMemory.UpdateItem(*updateItem)
+		updateStatus := update.String("status", "", "Status of the Todo item")
+		inMemory.UpdateItem(*updateItem, *updateStatus)
 		fmt.Printf("%s is updated to %s", *updateItem, *updateStatus)
 	case "delete":
 		delete.Parse(args[1:])

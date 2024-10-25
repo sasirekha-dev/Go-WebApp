@@ -34,3 +34,6 @@ type BaseStore struct {
 	mu         sync.Mutex
 	wg         sync.WaitGroup
 }
+type UuidGenerator interface {
+	GenerateUUID() string
+}
