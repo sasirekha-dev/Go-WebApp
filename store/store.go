@@ -55,7 +55,7 @@ func (store *InMemoryStore) insertItem(req addRequest) {
 	}
 	todo := ToDoItem{Id: store.generator.GenerateUUID(), Item: req.item, Status: req.status}
 	store.ToDo = append(store.ToDo, todo)
-	fmt.Printf("Adding item %+v\n", store.ToDo)
+	fmt.Printf("Adding item %+v\n", req.item)
 
 	req.ResponseChan <- todo
 }
@@ -97,6 +97,7 @@ func (store *InMemoryStore) updateItem(req updateRequest) {
 
 	for i, task := range store.ToDo {
 		if task.Item == req.item {
+			fmt.Println("UPDATING-->", req.item)
 			store.ToDo[i].Status = req.status
 			req.ResponseChan <- nil
 		}
@@ -153,6 +154,7 @@ func (store *InMemoryStore) ExecuteCommand(ctx context.Context) {
 				fmt.Print("closing add channel...")
 				return
 			}
+			// store.insertItem(addReq)
 			store.wg.Add(1)
 			go func(req addRequest) {
 				defer store.wg.Done()
@@ -160,7 +162,7 @@ func (store *InMemoryStore) ExecuteCommand(ctx context.Context) {
 				store.insertItem(req)
 				fmt.Printf("Active goroutines: %d\n", runtime.NumGoroutine())
 			}(addReq)
-			store.wg.Wait()
+			// store.wg.Wait()
 
 		case updateReq, ok := <-store.updateChan:
 			fmt.Println("received req--> update")
@@ -168,7 +170,7 @@ func (store *InMemoryStore) ExecuteCommand(ctx context.Context) {
 				fmt.Print("closing update channel...")
 				return
 			}
-
+			// store.updateItem(updateReq)
 			store.wg.Add(1)
 			go func(req updateRequest) {
 				defer store.wg.Done()
@@ -176,14 +178,14 @@ func (store *InMemoryStore) ExecuteCommand(ctx context.Context) {
 				store.updateItem(req)
 				fmt.Printf("Active goroutines: %d\n", runtime.NumGoroutine())
 			}(updateReq)
-			store.wg.Wait()
+			// store.wg.Wait()
 		case deleteReq, ok := <-store.deleteChan:
 			fmt.Println("received req--> delete")
 			if !ok {
 				fmt.Print("closing delete channel...")
 				return
 			}
-
+			// store.deleteItem(deleteReq)
 			store.wg.Add(1)
 			go func(req DeleteRequest) {
 				defer store.wg.Done()
@@ -192,13 +194,14 @@ func (store *InMemoryStore) ExecuteCommand(ctx context.Context) {
 
 				fmt.Printf("Active goroutines: %d\n", runtime.NumGoroutine())
 			}(deleteReq)
-			store.wg.Wait()
+			// store.wg.Wait()
 		case listReq, ok := <-store.listChan:
 			fmt.Println("received req--> list")
 			if !ok {
 				fmt.Print("closing list channel...")
 				return
 			}
+			// store.listItems(listReq)
 			store.wg.Add(1)
 			go func(req listRequest) {
 				defer store.wg.Done()
@@ -206,7 +209,7 @@ func (store *InMemoryStore) ExecuteCommand(ctx context.Context) {
 				store.listItems(req)
 				fmt.Printf("Active goroutines: %d\n", runtime.NumGoroutine())
 			}(listReq)
-			store.wg.Wait()
+			// store.wg.Wait()
 		case <-ctx.Done():
 			fmt.Println("received shutdown signal, waiting for all operations to finish")
 			store.Shutdown()

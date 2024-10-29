@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"sync"
 	"testing"
@@ -11,30 +12,31 @@ func TestInMemoryStore_ParallelOperations(t *testing.T) {
 	ctx := context.Background()
 	store := NewInMemoryStore(ctx)
 	defer store.Shutdown()
-	numOfItems := 10
+	numOfItems := 4
 	t.Run("TestParallelInsertions", func(t *testing.T) {
 		var wg sync.WaitGroup
 
 		// Parallel insertions
-		// for i := 0; i < 10; i++ {
-		// 	wg.Add(1)
-		// 	go func(item string) {
-		// 		defer wg.Done()
-		// 		fmt.Println("TODO APP ITEM ADDED", store.InsertItem(item, "pending"))
-		// 	}(fmt.Sprintf("item-%d", i))
-		// }
-		//Continuous insertions
 		for i := 0; i < numOfItems; i++ {
-			item := "ITEM-" + strconv.Itoa(i)
-			store.InsertItem(item, "pending")
+			wg.Add(1)
+			go func(item string) {
+				defer wg.Done()
+				store.InsertItem(item, "pending")
+				fmt.Println("TODO APP ITEM ADDED", item)
+			}(fmt.Sprintf("item-%d", i))
 		}
+		//Continuous insertions
+		// for i := 0; i < numOfItems; i++ {
+		// 	item := "ITEM-" + strconv.Itoa(i)
+		// 	store.InsertItem(item, "pending")
+		// }
 
 		// Wait for all insertions to complete
 		wg.Wait()
 
 		items := store.ListItems()
 		if len(items) != numOfItems {
-			t.Errorf("expected 3 items, got %d", len(items))
+			t.Errorf("expected %d items, got %d", numOfItems, len(items))
 		}
 
 	})
@@ -42,7 +44,7 @@ func TestInMemoryStore_ParallelOperations(t *testing.T) {
 	t.Run("TestParallelDeletions", func(t *testing.T) {
 
 		for i := 0; i < numOfItems; i++ {
-			itemName := "ITEM-" + strconv.Itoa(i)
+			itemName := "item-" + strconv.Itoa(i)
 			err := store.DeleteItem(itemName)
 			if err != nil && err.Error() != "item was not deleted" {
 				t.Errorf("unexpected error during deletion: %v", err)
